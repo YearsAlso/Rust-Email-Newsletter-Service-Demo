@@ -29,6 +29,7 @@ pub fn run(tcp_listener: TcpListener) -> Result<Server, std::io::Error> {
                 "/",
                 web::get().to(|| async { HttpResponse::Ok().body("Hello world!") }),
             )
+            .route("/subscriptions", web::post().to(subscribe))
             .route("/{name}", web::get().to(greet))
             .route("/health", web::get().to(heath_check))
     })

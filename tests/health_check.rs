@@ -5,7 +5,7 @@ async fn spawn_app() -> String {
     let listener = TcpListener::bind("127.0.0.1:8080").expect("Failed to bind");
     let port = listener.local_addr().unwrap().port();
     let server = run(listener).expect("Failed to run the server");
-    let _ = tokio::spawn(server).await.expect("Failed to run server");
+    let _ = tokio::spawn(server);
     format!("http://127.0.0.1:{}", port)
 }
 
