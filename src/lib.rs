@@ -21,7 +21,6 @@ async fn subscribe(_form: web::Form<FormData>) -> HttpResponse {
     HttpResponse::Ok().finish()
 }
 
-// #[actix_web::main]
 pub fn run(tcp_listener: TcpListener) -> Result<Server, std::io::Error> {
     let server = HttpServer::new(|| {
         App::new()
@@ -29,9 +28,9 @@ pub fn run(tcp_listener: TcpListener) -> Result<Server, std::io::Error> {
                 "/",
                 web::get().to(|| async { HttpResponse::Ok().body("Hello world!") }),
             )
+            .route("/health_check", web::get().to(heath_check))
             .route("/subscriptions", web::post().to(subscribe))
-            .route("/{name}", web::get().to(greet))
-            .route("/health", web::get().to(heath_check))
+            .route("/greet/{name}", web::get().to(greet))
     })
     .listen(tcp_listener)?
     .run();
