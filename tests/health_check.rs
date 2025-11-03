@@ -1,17 +1,23 @@
 use email_newsletter_service::run;
 use std::net::TcpListener;
 
-async fn spawn_app() -> String {
+fn spawn_app() -> String {
     let listener = TcpListener::bind("127.0.0.1:8080").expect("Failed to bind");
     let port = listener.local_addr().unwrap().port();
     let server = run(listener).expect("Failed to run the server");
+    // 这一句的作用是将服务器任务.spawn()到Tokio运行时中异步执行。
+    // 使用 let _ = 是因为这里我们不关心返回的 JoinHandle，
+    // 只需要让服务器在后台持续运行即可。
+    // tokio::spawn() 会启动一个新的异步任务来运行服务器，
+    // 允许我们在测试中继续执行后续代码而不会阻塞主线程。
     let _ = tokio::spawn(server);
+
     format!("http://127.0.0.1:{}", port)
 }
 
 #[tokio::test]
 async fn health_check_works() {
-    let _address = spawn_app().await;
+    let _address = spawn_app();
     let client = reqwest::Client::new();
 
     let url = &format!("{}/health_check", &_address);
@@ -27,7 +33,7 @@ async fn health_check_works() {
 
 #[tokio::test]
 async fn subscribe_returns_a_200_for_valid_form_data() {
-    let _address = spawn_app().await;
+    let _address = spawn_app();
     let client = reqwest::Client::new();
     let body = "name=le%20guin&email=ursula_le_guin%40gmail.com";
     let response = client
@@ -43,7 +49,7 @@ async fn subscribe_returns_a_200_for_valid_form_data() {
 
 #[tokio::test]
 async fn subscribe_returns_a_400_when_data_is_missing() {
-    let _address = spawn_app().await;
+    let _address = spawn_app();
     let client = reqwest::Client::new();
     let test_cases = vec![
         ("name=le%20guin", "missing the email"),
