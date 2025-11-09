@@ -10,9 +10,10 @@ pub struct TestApp {
 }
 
 async fn spawn_app() -> TestApp {
-    let listener = TcpListener::bind("127.0.0.1:8080").expect("Failed to bind");
-    let port = listener.local_addr().unwrap().port();
     let configuration = get_configuration().expect("Failed to read configuration.");
+    let address = format!("{}:{}", configuration.application_host, configuration.application_port);
+    let listener = TcpListener::bind(address).expect("Failed to bind");
+    let port = listener.local_addr().unwrap().port();
 
     let connection_pool = PgPool::connect(&configuration.database.connection_string())
         .await

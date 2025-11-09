@@ -16,6 +16,7 @@ serde = { version = "1", features = ["derive"] }
 chrono = "0.4.42"
 dotenv = "0.15"
 uuid = { version = "1", features = ["v4"] }
+log = "0.4.28"
 
 [lib]
 path = "src/lib.rs"
