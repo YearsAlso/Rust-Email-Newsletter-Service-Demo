@@ -1,7 +1,7 @@
 use actix_web::{HttpResponse, web};
 use log::log;
 use sqlx::types::uuid;
-use sqlx_postgres::{PgConnection, PgPool};
+use sqlx_postgres::{PgPool};
 use uuid::Uuid;
 
 #[derive(serde::Deserialize)]

@@ -1,5 +1,3 @@
-use std::fmt::format;
-use sqlx_postgres::PgConnectOptions;
 
 #[derive(serde::Deserialize)]
 pub struct Settings {
@@ -24,7 +22,7 @@ impl DatabaseSettings {
 }
 
 pub fn get_configuration() -> Result<Settings, config::ConfigError> {
-    let mut settings = config::Config::builder()
+    let settings = config::Config::builder()
         .add_source(config::File::with_name("configuration.yaml"))
         .build()?;
 

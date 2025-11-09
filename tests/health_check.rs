@@ -1,7 +1,6 @@
 use email_newsletter_service::configuration::get_configuration;
 use email_newsletter_service::run;
-use sqlx_core::connection::Connection;
-use sqlx_postgres::{PgConnection, PgPool};
+use sqlx_postgres::{PgPool};
 use std::net::TcpListener;
 
 pub struct TestApp {
