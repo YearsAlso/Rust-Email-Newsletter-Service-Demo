@@ -1,10 +1,23 @@
+use email_newsletter_service::configuration::get_configuration;
 use email_newsletter_service::run;
+use sqlx_core::connection::Connection;
+use sqlx_postgres::{PgConnection, PgPool};
 use std::net::TcpListener;
 
-fn spawn_app() -> String {
+pub struct TestApp {
+    pub address: String,
+    pub db_pool: PgPool,
+}
+
+async fn spawn_app() -> TestApp {
     let listener = TcpListener::bind("127.0.0.1:8080").expect("Failed to bind");
     let port = listener.local_addr().unwrap().port();
-    let server = run(listener).expect("Failed to run the server");
+    let configuration = get_configuration().expect("Failed to read configuration.");
+
+    let connection_pool = PgPool::connect(&configuration.database.connection_string())
+        .await
+        .expect("Failed to connect to Postgres.");
+    let server = run(listener, connection_pool.clone()).expect("Failed to run the server");
     // 这一句的作用是将服务器任务.spawn()到Tokio运行时中异步执行。
     // 使用 let _ = 是因为这里我们不关心返回的 JoinHandle，
     // 只需要让服务器在后台持续运行即可。
@@ -12,15 +25,18 @@ fn spawn_app() -> String {
     // 允许我们在测试中继续执行后续代码而不会阻塞主线程。
     let _ = tokio::spawn(server);
 
-    format!("http://127.0.0.1:{}", port)
+    TestApp {
+        address: format!("http://127.0.0.1:{}", port),
+        db_pool: connection_pool,
+    }
 }
 
 #[tokio::test]
 async fn health_check_works() {
-    let _address = spawn_app();
+    let app = spawn_app().await;
     let client = reqwest::Client::new();
 
-    let url = &format!("{}/health_check", &_address);
+    let url = &format!("{}/health_check", &app.address);
     let response = client
         .get(url)
         .send()
@@ -33,11 +49,11 @@ async fn health_check_works() {
 
 #[tokio::test]
 async fn subscribe_returns_a_200_for_valid_form_data() {
-    let _address = spawn_app();
+    let app = spawn_app().await;
     let client = reqwest::Client::new();
     let body = "name=le%20guin&email=ursula_le_guin%40gmail.com";
     let response = client
-        .post(&format!("{}/subscriptions", &_address))
+        .post(&format!("{}/subscriptions", &app.address))
         .header("Content-Type", "application/x-www-form-urlencoded")
         .body(body)
         .send()
@@ -45,11 +61,19 @@ async fn subscribe_returns_a_200_for_valid_form_data() {
         .expect("Failed to execute request.");
 
     assert_eq!(200, response.status().as_u16());
+
+    let saved = sqlx::query!("SELECT email, name FROM subscriptions",)
+        .fetch_one(&app.db_pool)
+        .await
+        .expect("Failed to fetch saved subscription.");
+
+    assert_eq!(saved.email, "ursula_le_guin@gmail.com");
+    assert_eq!(saved.name, "le guin");
 }
 
 #[tokio::test]
 async fn subscribe_returns_a_400_when_data_is_missing() {
-    let _address = spawn_app();
+    let app = spawn_app().await;
     let client = reqwest::Client::new();
     let test_cases = vec![
         ("name=le%20guin", "missing the email"),
@@ -58,7 +82,7 @@ async fn subscribe_returns_a_400_when_data_is_missing() {
     ];
     for (invalid_body, error_message) in test_cases {
         let response = client
-            .post(&format!("{}/subscriptions", &_address))
+            .post(&format!("{}/subscriptions", &app.address))
             .header("Content-Type", "application/x-www-form-urlencoded")
             .body(invalid_body)
             .send()
