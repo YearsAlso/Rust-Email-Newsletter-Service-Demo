@@ -6,8 +6,12 @@ edition = "2024"
 [dependencies]
 actix-web="4"
 tokio-macros = { version = "2.6.0" }
+config = "0.15.18"
 tokio = { version = "1" , features = ["macros", "rt-multi-thread" ]}
 reqwest = "0.12.24"
+sqlx = "0.8"
+sqlx-core = "0.8"
+sqlx-postgres = "0.8"
 serde = { version = "1",features = ["derive"]}
 
 [lib]
