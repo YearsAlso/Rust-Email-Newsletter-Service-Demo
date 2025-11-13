@@ -17,6 +17,10 @@ chrono = "0.4.42"
 dotenv = "0.15"
 uuid = { version = "1", features = ["v4"] }
 log = "0.4.28"
+env_logger = "0.11.8"
+tracing = { version = "0.1", features = ["log"] }
+tracing-subscriber = { version = "0.3", features = ["env-filter", "registry"] }
+tracing-bunyan-formatter = "0.3"
 
 [lib]
 path = "src/lib.rs"
