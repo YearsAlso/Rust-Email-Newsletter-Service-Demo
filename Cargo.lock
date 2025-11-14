@@ -720,6 +720,7 @@ dependencies = [
  "tokio-macros",
  "tracing",
  "tracing-bunyan-formatter",
+ "tracing-log 0.1.4",
  "tracing-subscriber",
  "uuid",
 ]

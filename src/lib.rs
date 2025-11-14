@@ -9,6 +9,8 @@ pub mod routes;
 pub mod configuration;
 pub mod startup;
 
+pub mod telemetry;
+
 pub trait Log: Sync + Send {
 
     // 是否应该被启用
